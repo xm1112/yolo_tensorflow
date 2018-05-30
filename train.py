@@ -24,16 +24,16 @@ class Solver(object):
         self.summary_iter = cfg.SUMMARY_ITER
         self.save_iter = cfg.SAVE_ITER
         self.output_dir = os.path.join(
-            cfg.OUTPUT_DIR, datetime.datetime.now().strftime('%Y_%m_%d_%H_%M'))
+            cfg.OUTPUT_DIR, datetime.datetime.now().strftime('%Y_%m_%d_%H_%M'))#拼接路径
         if not os.path.exists(self.output_dir):
-            os.makedirs(self.output_dir)
+            os.makedirs(self.output_dir)#用于递归创建目录，该没有返回值
         self.save_cfg()
 
         self.variable_to_restore = tf.global_variables()
-        self.saver = tf.train.Saver(self.variable_to_restore, max_to_keep=None)
+        self.saver = tf.train.Saver(self.variable_to_restore, max_to_keep=None)#保存模型
         self.ckpt_file = os.path.join(self.output_dir, 'yolo')
-        self.summary_op = tf.summary.merge_all()
-        self.writer = tf.summary.FileWriter(self.output_dir, flush_secs=60)
+        self.summary_op = tf.summary.merge_all()#汇总记录节点
+        self.writer = tf.summary.FileWriter(self.output_dir, flush_secs=60)#日志书写器实例化，实例化的同时传入graph，将当前计算图写入日志
 
         self.global_step = tf.train.create_global_step()
         self.learning_rate = tf.train.exponential_decay(

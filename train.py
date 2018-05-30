@@ -7,7 +7,7 @@ from yolo.yolo_net import YOLONet
 from utils.timer import Timer
 from utils.pascal_voc import pascal_voc
 
-slim = tf.contrib.slim
+slim = tf.contrib.slim  #其主要目的是来做所谓的“代码瘦身”
 
 
 class Solver(object):

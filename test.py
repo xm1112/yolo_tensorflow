@@ -41,11 +41,11 @@ class Detector(object):
             cv2.rectangle(img, (x - w, y - h), (x + w, y + h), (0, 255, 0), 2)
             cv2.rectangle(img, (x - w, y - h - 20),
                           (x + w, y - h), (125, 125, 125), -1)
-            lineType = cv2.LINE_AA if cv2.__version__ > '3' else cv2.CV_AA
+            #lineType = cv2.LINE_AA if cv2.__version__ > '3' else cv2.CV_AA
             cv2.putText(
                 img, result[i][0] + ' : %.2f' % result[i][5],
                 (x - w + 5, y - h - 7), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                (0, 0, 0), 1, lineType)
+                (0, 0, 0), 1, cv2.LINE_AA)
 
     def detect(self, img):
         img_h, img_w, _ = img.shape
@@ -148,7 +148,10 @@ class Detector(object):
             max(box1[0] - 0.5 * box1[2], box2[0] - 0.5 * box2[2])
         lr = min(box1[1] + 0.5 * box1[3], box2[1] + 0.5 * box2[3]) - \
             max(box1[1] - 0.5 * box1[3], box2[1] - 0.5 * box2[3])
-        inter = 0 if tb < 0 or lr < 0 else tb * lr
+        if tb < 0 or lr < 0 :
+            inter = 0
+        else:
+            inter=tb * lr
         return inter / (box1[2] * box1[3] + box2[2] * box2[3] - inter)
 
     def camera_detector(self, cap, wait=10):
@@ -164,6 +167,7 @@ class Detector(object):
                 detect_timer.average_time))
 
             self.draw_result(frame, result)
+            cv2.namedwindow('Camera',0)
             cv2.imshow('Camera', frame)
             cv2.waitKey(wait)
 

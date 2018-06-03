@@ -15,12 +15,12 @@ class Solver(object):
     def __init__(self, net, data):
         self.net = net
         self.data = data
-        self.weights_file = cfg.WEIGHTS_FILE
-        self.max_iter = cfg.MAX_ITER
+        self.weights_file = cfg.WEIGHTS_FILE#网络权重
+        self.max_iter = cfg.MAX_ITER#最大迭代数目
         self.initial_learning_rate = cfg.LEARNING_RATE
         self.decay_steps = cfg.DECAY_STEPS
         self.decay_rate = cfg.DECAY_RATE
-        self.staircase = cfg.STAIRCASE
+        self.staircase = cfg.STAIRCASE#？？？？？？？？
         self.summary_iter = cfg.SUMMARY_ITER
         self.save_iter = cfg.SAVE_ITER
         self.output_dir = os.path.join(
@@ -30,19 +30,25 @@ class Solver(object):
         self.save_cfg()
 
         self.variable_to_restore = tf.global_variables()
+        self.restorer=tf.train.saver(self.variable_to_restore,max_to_keep=None)
         self.saver = tf.train.Saver(self.variable_to_restore, max_to_keep=None)#保存模型
-        self.ckpt_file = os.path.join(self.output_dir, 'yolo')
+        self.ckpt_file = os.path.join(self.output_dir, 'save.ckpt')
         self.summary_op = tf.summary.merge_all()#汇总记录节点
         self.writer = tf.summary.FileWriter(self.output_dir, flush_secs=60)#日志书写器实例化，实例化的同时传入graph，将当前计算图写入日志
 
-        self.global_step = tf.train.create_global_step()
+        #self.global_step = tf.train.create_global_step()
+        self.global_step=tf.get_variable('global_step',[],initializer=tf.constant_initializer(0),trainable=False)
         self.learning_rate = tf.train.exponential_decay(
             self.initial_learning_rate, self.global_step, self.decay_steps,
             self.decay_rate, self.staircase, name='learning_rate')
         self.optimizer = tf.train.GradientDescentOptimizer(
-            learning_rate=self.learning_rate)
+            learning_rate=self.learning_rate).minimize(self.net.total_loss,global_step=self.)
         self.train_op = slim.learning.create_train_op(
             self.net.total_loss, self.optimizer, global_step=self.global_step)
+        self.ema=tf.train.ExponentialMovingAverage(decay=0.9999)
+        self.average_op=self.ema.apply(tf.trainable_variables())
+        with tf.control_dependencies([self.optimzer]):
+            self.train_op=tf.group(self.average_op)
 
         gpu_options = tf.GPUOptions()
         config = tf.ConfigProto(gpu_options=gpu_options)
@@ -51,7 +57,7 @@ class Solver(object):
 
         if self.weights_file is not None:
             print('Restoring weights from: ' + self.weights_file)
-            self.saver.restore(self.sess, self.weights_file)
+            self.restorer.restore(self.sess, self.weights_file)
 
         self.writer.add_graph(self.sess.graph)
 
